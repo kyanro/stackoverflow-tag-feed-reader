@@ -11,18 +11,18 @@ import java.util.List;
 /**
  * Created by ppp on 2015/01/16.
  */
-@Root
+@Root(strict = false)
 public class Feed {
     @ElementList(entry = "entry", inline = true)
     public List<Entry> entries;
 
-    @Root
+    @Root(strict = false)
     public static class Entry{
         @Element
         public String id;
 
         @Element
-        public String title;
+        public String title = "test";
 
         @Element
         public String published;

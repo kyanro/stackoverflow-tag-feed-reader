@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.support.annotation.LayoutRes;
 import android.support.annotation.NonNull;
 import android.support.v7.app.ActionBarActivity;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -23,8 +24,9 @@ import java.util.List;
 import butterknife.ButterKnife;
 import butterknife.InjectView;
 import retrofit.RestAdapter;
+import retrofit.RestAdapter.LogLevel;
+import retrofit.android.AndroidLog;
 import retrofit.converter.SimpleXMLConverter;
-import rx.Observable;
 import rx.android.schedulers.AndroidSchedulers;
 
 
@@ -39,33 +41,23 @@ public class MainActivity extends ActionBarActivity {
         setContentView(R.layout.activity_main);
         ButterKnife.inject(this);
 
-        // debug
         final List<Entry> entries = new ArrayList<>();
-        //entries.add(new Entry() {{
-        //    title = "test1";
-        //    published = "post1";
-        //}});
-        //entries.add(new Entry() {{
-        //    title = "test2";
-        //    published = "post2";
-        //}});
-        //
-        //mFeedListView.setAdapter(new feedAdapter(this, android.R.layout.simple_list_item_2, entries));
 
         RestAdapter restAdapter = new RestAdapter.Builder()
                 .setEndpoint(ApiService.STACKOVERFLOW_HOST)
                 .setConverter(new SimpleXMLConverter())
+                .setLog(new AndroidLog("myrx"))
+                .setLogLevel(LogLevel.FULL)
                 .build();
 
         StackoverflowService service = restAdapter.create(StackoverflowService.class);
 
-        //service.newest()
-        Observable.just(new Feed())
+        service.newest()
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(feed -> {
                     entries.addAll(feed.entries);
                     mFeedListView.setAdapter(new feedAdapter(this, android.R.layout.simple_list_item_2, entries));
-                });
+                }, e -> Log.d("myrx", "error:" + e.getMessage()));
     }
 
     public static class feedAdapter extends ArrayAdapter<Entry> {
