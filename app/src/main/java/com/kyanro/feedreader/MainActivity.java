@@ -27,6 +27,7 @@ import retrofit.RestAdapter;
 import retrofit.RestAdapter.LogLevel;
 import retrofit.android.AndroidLog;
 import retrofit.converter.SimpleXMLConverter;
+import rx.Observable;
 import rx.android.schedulers.AndroidSchedulers;
 
 
@@ -52,11 +53,15 @@ public class MainActivity extends ActionBarActivity {
 
         StackoverflowService service = restAdapter.create(StackoverflowService.class);
 
+        final feedAdapter feedAdapter = new feedAdapter(this, android.R.layout.simple_list_item_2, entries);
+        mFeedListView.setAdapter(feedAdapter);
+
         service.newest()
+                .flatMap(feed -> Observable.from(feed.entries))
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(feed -> {
-                    entries.addAll(feed.entries);
-                    mFeedListView.setAdapter(new feedAdapter(this, android.R.layout.simple_list_item_2, entries));
+                .subscribe(entry -> {
+                    entries.add(entry);
+                    feedAdapter.notifyDataSetChanged();
                 }, e -> Log.d("myrx", "error:" + e.getMessage()));
     }
 
