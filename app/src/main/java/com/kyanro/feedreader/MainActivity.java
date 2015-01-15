@@ -14,12 +14,18 @@ import android.widget.TextView;
 
 import com.kyanro.feedreader.models.Feed;
 import com.kyanro.feedreader.models.Feed.Entry;
+import com.kyanro.feedreader.network.ApiService;
+import com.kyanro.feedreader.network.ApiService.StackoverflowService;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import butterknife.ButterKnife;
 import butterknife.InjectView;
+import retrofit.RestAdapter;
+import retrofit.converter.SimpleXMLConverter;
+import rx.Observable;
+import rx.android.schedulers.AndroidSchedulers;
 
 
 public class MainActivity extends ActionBarActivity {
@@ -34,11 +40,32 @@ public class MainActivity extends ActionBarActivity {
         ButterKnife.inject(this);
 
         // debug
-        List<Entry> entries = new ArrayList<>();
-        entries.add(new Entry(){{ title="test1"; published="post1"; }});
-        entries.add(new Entry(){{ title="test2"; published="post2"; }});
+        final List<Entry> entries = new ArrayList<>();
+        //entries.add(new Entry() {{
+        //    title = "test1";
+        //    published = "post1";
+        //}});
+        //entries.add(new Entry() {{
+        //    title = "test2";
+        //    published = "post2";
+        //}});
+        //
+        //mFeedListView.setAdapter(new feedAdapter(this, android.R.layout.simple_list_item_2, entries));
 
-        mFeedListView.setAdapter(new feedAdapter(this, android.R.layout.simple_list_item_2, entries));
+        RestAdapter restAdapter = new RestAdapter.Builder()
+                .setEndpoint(ApiService.STACKOVERFLOW_HOST)
+                .setConverter(new SimpleXMLConverter())
+                .build();
+
+        StackoverflowService service = restAdapter.create(StackoverflowService.class);
+
+        //service.newest()
+        Observable.just(new Feed())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(feed -> {
+                    entries.addAll(feed.entries);
+                    mFeedListView.setAdapter(new feedAdapter(this, android.R.layout.simple_list_item_2, entries));
+                });
     }
 
     public static class feedAdapter extends ArrayAdapter<Entry> {
@@ -46,6 +73,7 @@ public class MainActivity extends ActionBarActivity {
         LayoutInflater inflater;
         @LayoutRes
         int resource;
+
         public feedAdapter(@NonNull Context context, @LayoutRes int resource, @NonNull List<Entry> entries) {
             super(context, resource, entries);
             inflater = LayoutInflater.from(context);
@@ -70,7 +98,7 @@ public class MainActivity extends ActionBarActivity {
             return view;
         }
 
-        static class ViewHolder{
+        static class ViewHolder {
             @InjectView(android.R.id.text1)
             TextView titleText;
             @InjectView(android.R.id.text2)
