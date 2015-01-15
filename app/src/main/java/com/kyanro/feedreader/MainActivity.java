@@ -58,6 +58,7 @@ public class MainActivity extends ActionBarActivity {
 
         service.newest()
                 .flatMap(feed -> Observable.from(feed.entries))
+                .take(5)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(entry -> {
                     entries.add(entry);
