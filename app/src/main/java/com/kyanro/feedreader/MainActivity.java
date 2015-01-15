@@ -13,6 +13,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import com.kyanro.feedreader.models.Feed;
+import com.kyanro.feedreader.models.Feed.Entry;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,8 +23,6 @@ import butterknife.InjectView;
 
 
 public class MainActivity extends ActionBarActivity {
-
-    List<Feed> mFeeds = new ArrayList<>();
 
     @InjectView(R.id.feed_listview)
     ListView mFeedListView;
@@ -35,19 +34,20 @@ public class MainActivity extends ActionBarActivity {
         ButterKnife.inject(this);
 
         // debug
-        mFeeds.add(new Feed(){{ title="test1"; post_time="post1"; }});
-        mFeeds.add(new Feed(){{ title="test2"; post_time="post2"; }});
+        List<Entry> entries = new ArrayList<>();
+        entries.add(new Entry(){{ title="test1"; published="post1"; }});
+        entries.add(new Entry(){{ title="test2"; published="post2"; }});
 
-        mFeedListView.setAdapter(new feedAdapter(this, android.R.layout.simple_list_item_2, mFeeds));
+        mFeedListView.setAdapter(new feedAdapter(this, android.R.layout.simple_list_item_2, entries));
     }
 
-    public static class feedAdapter extends ArrayAdapter<Feed> {
+    public static class feedAdapter extends ArrayAdapter<Entry> {
 
         LayoutInflater inflater;
         @LayoutRes
         int resource;
-        public feedAdapter(@NonNull Context context, @LayoutRes int resource, @NonNull List<Feed> feeds) {
-            super(context, resource, feeds);
+        public feedAdapter(@NonNull Context context, @LayoutRes int resource, @NonNull List<Entry> entries) {
+            super(context, resource, entries);
             inflater = LayoutInflater.from(context);
             this.resource = resource;
         }
@@ -63,9 +63,9 @@ public class MainActivity extends ActionBarActivity {
                 holder = (ViewHolder) view.getTag();
             }
 
-            Feed feed = getItem(position);
-            holder.titleText.setText(feed.title);
-            holder.postTimeText.setText(feed.post_time);
+            Entry entry = getItem(position);
+            holder.titleText.setText(entry.title);
+            holder.postTimeText.setText(entry.published);
 
             return view;
         }
