@@ -31,7 +31,7 @@ public class Stackoverflow {
     }
 
     public interface StackoverflowService{
-        @GET("/feeds/tag?tagnames=java&sort=newest")
+        @GET("/feeds/tag?sort=newest")
         public Observable<Feed> getFeedsTag(@Query("tagnames") String tagnames);
     }
 

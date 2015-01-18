@@ -15,6 +15,7 @@ import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.kyanro.feedreader.models.Feed.Entry;
 import com.kyanro.feedreader.network.Stackoverflow;
@@ -26,6 +27,7 @@ import java.util.List;
 import butterknife.ButterKnife;
 import butterknife.InjectView;
 import rx.Observable;
+import rx.android.schedulers.AndroidSchedulers;
 import rx.android.view.OnClickEvent;
 import rx.android.view.ViewObservable;
 import rx.functions.Func1;
@@ -55,7 +57,6 @@ public class MainActivity extends ActionBarActivity {
         final feedAdapter feedAdapter = new feedAdapter(this, android.R.layout.simple_list_item_2, entries);
         mFeedListView.setAdapter(feedAdapter);
 
-
         // 必要な TextChangeEvent を observable 化
         Observable<String> tagTextChangedStream =
                 Observable.<String>create(subscriber -> mTagEditText.addTextChangedListener(new TextWatcher() {
@@ -69,7 +70,6 @@ public class MainActivity extends ActionBarActivity {
 
                     @Override
                     public void afterTextChanged(Editable s) {
-                        //Log.d("myrx", "s?:" + s);
                         if (s == null) {
                             subscriber.onNext(null);
                         } else {
@@ -77,50 +77,30 @@ public class MainActivity extends ActionBarActivity {
                         }
                     }
                 }));
-                        //.startWith((String) null);
 
         Observable<OnClickEvent> refreshClickStream = ViewObservable.clicks(mRefreshButton);
 
-        refreshClickStream.join(tagTextChangedStream,
-                new Func1<OnClickEvent, Observable<OnClickEvent>>() {
-                    @Override
-                    public Observable<OnClickEvent> call(OnClickEvent onClickEvent) {
-                        // クリックのイベントのdulationはなくていいのでemptyを設定
-                        return Observable.empty();
-                    }
+        Observable<Entry> entryUpdateStream = refreshClickStream
+                .doOnNext(e -> Log.d("myrx", "refresh clicked"))
+                .join(  // 更新クリック時に最新のtagChangedStream の値を後ろへ流すよう合成
+                        tagTextChangedStream,
+                        onClickEvent -> Observable.empty(),
+                        s -> tagTextChangedStream.publish().refCount(),
+                        (onClickEvent, s) -> s)
+                .doOnNext(e -> Log.d("myrx", "joined"))
+                .distinct()
+                .flatMap(service::getFeedsTag)
+                .doOnNext(e -> Log.d("myrx", "got feed"))
+                .flatMap(feed -> Observable.from(feed.entries))
+                .take(5);
 
-                },
-                new Func1<String, Observable<String>>() {
-                    @Override
-                    public Observable<String> call(String s) {
-                        // 次のTextChanged イベントの発生までをDuration とする
-                        // ちょっとまだこのへんの理解が怪しい
-                        return tagTextChangedStream.publish().refCount();
-                    }
-                },
-                new Func2<OnClickEvent, String, String>() {
-                    @Override
-                    public String call(OnClickEvent onClickEvent, String s) {
-                        return s;
-                    }
-                })
-                .subscribe(s -> Log.d("myrx", "success:" + s));
-
-
-        //
-        //Observable<Entry> entryStream =  refreshClickStream
-        //        //.zipWith(tagTextChangedStream.last(), (onClickEvent, s) -> s)
-        //        .flatMap(onClickEvent -> Observable.<String>just(null))
-        //        .flatMap(service::getFeedsTag)
-        //        .flatMap(feed -> Observable.from(feed.entries));
-        //
-        //entryStream
-        //        .take(5)
-        //        .observeOn(AndroidSchedulers.mainThread())
-        //        .subscribe(entry -> {
-        //            entries.add(entry);
-        //            feedAdapter.notifyDataSetChanged();
-        //        }, e -> Log.d("myrx", "error:" + e.getMessage()));
+        entryUpdateStream
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(entry -> {
+                    entries.add(entry);
+                    feedAdapter.notifyDataSetChanged();
+                }, e -> Toast.makeText(this, "error:" + e.getMessage(), Toast.LENGTH_LONG).show()
+                , () -> Log.d("myrx", "complete!"));
     }
 
     public static class feedAdapter extends ArrayAdapter<Entry> {
