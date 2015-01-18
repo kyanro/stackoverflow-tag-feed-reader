@@ -30,8 +30,6 @@ import rx.Observable;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.android.view.OnClickEvent;
 import rx.android.view.ViewObservable;
-import rx.functions.Func1;
-import rx.functions.Func2;
 
 
 public class MainActivity extends ActionBarActivity {
@@ -91,8 +89,7 @@ public class MainActivity extends ActionBarActivity {
                 .distinct()
                 .flatMap(service::getFeedsTag)
                 .doOnNext(e -> Log.d("myrx", "got feed"))
-                .flatMap(feed -> Observable.from(feed.entries))
-                .take(5);
+                .flatMap(feed -> Observable.from(feed.entries).take(5));
 
         entryUpdateStream
                 .observeOn(AndroidSchedulers.mainThread())
@@ -100,7 +97,7 @@ public class MainActivity extends ActionBarActivity {
                     entries.add(entry);
                     feedAdapter.notifyDataSetChanged();
                 }, e -> Toast.makeText(this, "error:" + e.getMessage(), Toast.LENGTH_LONG).show()
-                , () -> Log.d("myrx", "complete!"));
+                        , () -> Log.d("myrx", "complete!"));
     }
 
     public static class feedAdapter extends ArrayAdapter<Entry> {
