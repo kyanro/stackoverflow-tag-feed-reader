@@ -1,6 +1,8 @@
 package com.kyanro.feedreader;
 
 import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.LayoutRes;
 import android.support.annotation.NonNull;
@@ -11,6 +13,8 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ListView;
@@ -57,6 +61,11 @@ public class MainActivity extends ActionBarActivity {
 
         final feedAdapter feedAdapter = new feedAdapter(this, android.R.layout.simple_list_item_2, entries);
         mFeedListView.setAdapter(feedAdapter);
+        mFeedListView.setOnItemClickListener((parent, view, position, id) -> {
+            Entry entry = (Entry) mFeedListView.getItemAtPosition(position);
+            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(entry.id));
+            startActivity(intent);
+        });
 
         // 必要な TextChangeEvent を observable 化
         Observable<String> tagTextChangedStream =
