@@ -17,11 +17,13 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.kyanro.feedreader.models.Feed;
 import com.kyanro.feedreader.models.Feed.Entry;
 import com.kyanro.feedreader.network.Stackoverflow;
 import com.kyanro.feedreader.network.Stackoverflow.StackoverflowService;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import butterknife.ButterKnife;
@@ -30,6 +32,7 @@ import rx.Observable;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.android.view.OnClickEvent;
 import rx.android.view.ViewObservable;
+import rx.functions.Func1;
 
 
 public class MainActivity extends ActionBarActivity {
@@ -48,7 +51,7 @@ public class MainActivity extends ActionBarActivity {
         setContentView(R.layout.activity_main);
         ButterKnife.inject(this);
 
-        final List<Entry> entries = new ArrayList<>();
+        final List<Entry> entries = Collections.synchronizedList(new ArrayList<>());
 
         StackoverflowService service = Stackoverflow.getStackoverflowService();
 
@@ -87,17 +90,27 @@ public class MainActivity extends ActionBarActivity {
                         (onClickEvent, s) -> s)
                 .doOnNext(e -> Log.d("myrx", "joined"))
                 .distinct()
-                .flatMap(service::getFeedsTag)
-                .doOnNext(e -> Log.d("myrx", "got feed"))
+                .flatMap((tag) -> service.getFeedsTag(tag)
+                                // エラーハンドリング。エラーメッセージを表示
+                                .doOnError(e -> mFeedListView.post(() ->
+                                        Toast.makeText(this, "message:" + e.getMessage(), Toast.LENGTH_LONG).show()))
+                                        // unsubscribeはさせたくないため、内部でonErrorResumeNextして何事もなかったことにする
+                                .onErrorResumeNext(throwable -> Observable.empty())
+                )
+                .doOnNext(feed -> entries.clear()) // side effects. ネットワーク処理がうまくいったらリストをクリアしておく
                 .flatMap(feed -> Observable.from(feed.entries).take(5));
 
         entryUpdateStream
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(entry -> {
-                    entries.add(entry);
-                    feedAdapter.notifyDataSetChanged();
-                }, e -> Toast.makeText(this, "error:" + e.getMessage(), Toast.LENGTH_LONG).show()
-                        , () -> Log.d("myrx", "complete!"));
+                            entries.add(entry);
+                            feedAdapter.notifyDataSetChanged();
+                        }, e -> {
+                            Log.d("myrx", "error occured:" + e.getMessage());
+                            Toast.makeText(this, "error:" + e.getMessage(), Toast.LENGTH_LONG).show();
+                        }
+                        , () -> Log.d("myrx", "complete!")
+                );
     }
 
     public static class feedAdapter extends ArrayAdapter<Entry> {
