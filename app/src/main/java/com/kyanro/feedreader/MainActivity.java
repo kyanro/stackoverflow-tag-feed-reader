@@ -37,6 +37,7 @@ import rx.android.schedulers.AndroidSchedulers;
 import rx.android.view.OnClickEvent;
 import rx.android.view.ViewObservable;
 import rx.functions.Func1;
+import rx.subscriptions.CompositeSubscription;
 
 
 public class MainActivity extends ActionBarActivity {
@@ -47,6 +48,8 @@ public class MainActivity extends ActionBarActivity {
     View mRefreshButton;
     @InjectView(R.id.feed_listview)
     ListView mFeedListView;
+
+    CompositeSubscription mSubscriptions = new CompositeSubscription();
 
 
     @Override
@@ -109,17 +112,25 @@ public class MainActivity extends ActionBarActivity {
                 .doOnNext(feed -> entries.clear()) // side effects. ネットワーク処理がうまくいったらリストをクリアしておく
                 .flatMap(feed -> Observable.from(feed.entries).take(5));
 
-        entryUpdateStream
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(entry -> {
-                            entries.add(entry);
-                            feedAdapter.notifyDataSetChanged();
-                        }, e -> {
-                            Log.d("myrx", "error occured:" + e.getMessage());
-                            Toast.makeText(this, "error:" + e.getMessage(), Toast.LENGTH_LONG).show();
-                        }
-                        , () -> Log.d("myrx", "complete!")
-                );
+        mSubscriptions.add(
+                entryUpdateStream
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribe(entry -> {
+                                    entries.add(entry);
+                                    feedAdapter.notifyDataSetChanged();
+                                }, e -> {
+                                    Log.d("myrx", "error occured:" + e.getMessage());
+                                    Toast.makeText(this, "error:" + e.getMessage(), Toast.LENGTH_LONG).show();
+                                }
+                                , () -> Log.d("myrx", "complete!")
+                        )
+        );
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        mSubscriptions.clear();
     }
 
     public static class feedAdapter extends ArrayAdapter<Entry> {
