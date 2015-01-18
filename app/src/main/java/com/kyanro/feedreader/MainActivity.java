@@ -56,6 +56,7 @@ public class MainActivity extends ActionBarActivity {
         mFeedListView.setAdapter(feedAdapter);
 
 
+        // 必要な TextChangeEvent を observable 化
         Observable<String> tagTextChangedStream =
                 Observable.<String>create(subscriber -> mTagEditText.addTextChangedListener(new TextWatcher() {
                     @Override
@@ -75,90 +76,37 @@ public class MainActivity extends ActionBarActivity {
                             subscriber.onNext(s.toString());
                         }
                     }
-                }))
-                        .startWith((String) null);
+                }));
+                        //.startWith((String) null);
 
         Observable<OnClickEvent> refreshClickStream = ViewObservable.clicks(mRefreshButton);
-
-        Observable<String> tagTextChangedCounted = tagTextChangedStream.publish().refCount();
-
-
-        Observable<OnClickEvent> clickCounted = refreshClickStream.publish().refCount();
 
         refreshClickStream.join(tagTextChangedStream,
                 new Func1<OnClickEvent, Observable<OnClickEvent>>() {
                     @Override
                     public Observable<OnClickEvent> call(OnClickEvent onClickEvent) {
-                        Log.d("myrx", "left duration:");
-                        return clickCounted;
+                        // クリックのイベントのdulationはなくていいのでemptyを設定
+                        return Observable.empty();
                     }
+
                 },
                 new Func1<String, Observable<String>>() {
                     @Override
                     public Observable<String> call(String s) {
-                        Log.d("myrx", "right duration:" + s);
-                        return tagTextChangedCounted;
+                        // 次のTextChanged イベントの発生までをDuration とする
+                        // ちょっとまだこのへんの理解が怪しい
+                        return tagTextChangedStream.publish().refCount();
                     }
                 },
                 new Func2<OnClickEvent, String, String>() {
                     @Override
                     public String call(OnClickEvent onClickEvent, String s) {
-                        Log.d("myrx", "result:" + s);
-
                         return s;
                     }
                 })
                 .subscribe(s -> Log.d("myrx", "success:" + s));
 
 
-        //tagTextChangedStream,
-        //new Func1<OnClickEvent, Observable<OnClickEvent>>() {
-        //    @Override
-        //    public Observable<OnClickEvent> call(OnClickEvent onClickEvent) {
-        //        Log.d("myrx", "left selector:");
-        //        return Observable.empty();
-        //    }
-        //},
-        //new Func1<String, Observable<String>>() {
-        //    @Override
-        //    public Observable<String> call(String s) {
-        //        Log.d("myrx", "right selector:" + s);
-        //        return Observable.just(s);
-        //    }
-        //},
-        //new Func2<OnClickEvent, String, String>() {
-        //    @Override
-        //    public String call(OnClickEvent onClickEvent, String s) {
-        //        Log.d("myrx", "result:" + s);
-        //        return s;
-        //    }
-        //})
-        //.subscribe(s -> Log.d("myrx", "success:" + s));
-
-        //tagTextChangedStream.join(refreshClickStream,
-        //        new Func1<String, Observable<String>>() {
-        //            @Override
-        //            public Observable<String> call(String s) {
-        //                Log.d("myrx", "left selector:" + s);
-        //                return Observable.just(s);
-        //            }
-        //        },
-        //        new Func1<OnClickEvent, Observable<OnClickEvent>>() {
-        //            @Override
-        //            public Observable<OnClickEvent> call(OnClickEvent onClickEvent) {
-        //                Log.d("myrx", "right selector:");
-        //                return Observable.just(onClickEvent);
-        //            }
-        //        },
-        //        new Func2<String, OnClickEvent, String>() {
-        //            @Override
-        //            public String call(String s, OnClickEvent onClickEvent) {
-        //                Log.d("myrx", "result stream:" + s);
-        //                return s;
-        //            }
-        //        })
-        //        //.zipWith(refreshClickStream, (s, onClickEvent) -> s)
-        //        .subscribe(s -> Log.d("myrx", "success:" + s));
         //
         //Observable<Entry> entryStream =  refreshClickStream
         //        //.zipWith(tagTextChangedStream.last(), (onClickEvent, s) -> s)
