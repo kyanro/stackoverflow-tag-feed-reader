@@ -6,8 +6,11 @@ import android.support.annotation.NonNull;
 import com.kyanro.feedreader.models.Feed;
 
 import retrofit.RestAdapter.Builder;
+import retrofit.RestAdapter.LogLevel;
+import retrofit.android.AndroidLog;
 import retrofit.converter.SimpleXMLConverter;
 import retrofit.http.GET;
+import retrofit.http.POST;
 import retrofit.http.Query;
 import rx.Observable;
 
@@ -24,6 +27,8 @@ public class Stackoverflow {
             stackoverflowService = new Builder()
                     .setEndpoint(STACKOVERFLOW_HOST)
                     .setConverter(new SimpleXMLConverter())
+                    .setLogLevel(LogLevel.FULL)
+                    .setLog(new AndroidLog("myapi"))
                     .build()
                     .create(StackoverflowService.class);
         }
@@ -31,7 +36,7 @@ public class Stackoverflow {
     }
 
     public interface StackoverflowService{
-        @GET("/feeds/tag?sort=newest")
+        @POST("/feeds/tag?sort=newest")
         public Observable<Feed> getFeedsTag(@Query("tagnames") String tagnames);
     }
 
