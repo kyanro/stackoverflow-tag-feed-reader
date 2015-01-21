@@ -33,10 +33,16 @@ import java.util.List;
 import butterknife.ButterKnife;
 import butterknife.InjectView;
 import rx.Observable;
+import rx.Observable.OnSubscribe;
+import rx.Observer;
+import rx.Subscriber;
+import rx.Subscription;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.android.view.OnClickEvent;
 import rx.android.view.ViewObservable;
 import rx.functions.Func1;
+import rx.subjects.PublishSubject;
+import rx.subjects.Subject;
 import rx.subscriptions.CompositeSubscription;
 
 
@@ -112,6 +118,7 @@ public class MainActivity extends ActionBarActivity {
                 .doOnNext(feed -> entries.clear()) // side effects. ネットワーク処理がうまくいったらリストをクリアしておく
                 .flatMap(feed -> Observable.from(feed.entries).take(5));
 
+
         mSubscriptions.add(
                 entryUpdateStream
                         .observeOn(AndroidSchedulers.mainThread())
@@ -125,6 +132,52 @@ public class MainActivity extends ActionBarActivity {
                                 , () -> Log.d("myrx", "complete!")
                         )
         );
+
+        Subscriber<String> subscriber = new Subscriber<String>() {
+            @Override
+            public void onCompleted() {
+                Log.d("myrx", "subject complete");
+            }
+
+            @Override
+            public void onError(Throwable e) {
+                Log.d("myrx", "subject onError:" + e.getMessage());
+            }
+
+            @Override
+            public void onNext(String s) {
+                Log.d("myrx", "subject onNext:" + s);
+            }
+        };
+
+        Subscriber<String> subscriber2 = new Subscriber<String>() {
+            @Override
+            public void onCompleted() {
+                Log.d("myrx", "subject complete");
+            }
+
+            @Override
+            public void onError(Throwable e) {
+                Log.d("myrx", "subject onError:" + e.getMessage());
+            }
+
+            @Override
+            public void onNext(String s) {
+                Log.d("myrx", "subject onNext:" + s);
+            }
+        };
+
+        PublishSubject<String> subject = PublishSubject.create();
+        Subscription s1 = subject.subscribe(subscriber);
+        Subscription s2 = subject.subscribe(subscriber2);
+        subject.onNext("subject test1");
+        s1.unsubscribe();
+        subject.onNext("subject test2");
+        s2.unsubscribe();
+        subject.onNext("subject test3");
+        subject.onCompleted();
+
+
     }
 
     @Override
