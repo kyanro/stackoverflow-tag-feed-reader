@@ -15,6 +15,7 @@ import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.ArrayAdapter;
@@ -63,6 +64,19 @@ public class MainActivity extends ActionBarActivity {
 
         setContentView(R.layout.activity_main);
         ButterKnife.inject(this);
+
+        mToolbar.findViewById(R.id.left_button).setOnClickListener(v -> {
+                    mMainContainer.closeDrawer(Gravity.RIGHT);
+                    mMainContainer.openDrawer(Gravity.LEFT);
+                });
+
+        mToolbar.findViewById(R.id.right_button).setOnClickListener(v -> {
+            mMainContainer.closeDrawer(Gravity.LEFT);
+            mMainContainer.openDrawer(Gravity.RIGHT);
+        });
+
+        mToolbar.findViewById(R.id.right_button).setOnClickListener(v -> mMainContainer.openDrawer(Gravity.LEFT));
+
         setSupportActionBar(mToolbar);
 
         mMainContainer.openDrawer(Gravity.LEFT);

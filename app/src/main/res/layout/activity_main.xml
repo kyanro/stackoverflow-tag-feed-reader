@@ -23,8 +23,22 @@
             android:layout_height="wrap_content"
             app:theme="@style/Base.ThemeOverlay.AppCompat.ActionBar"
             android:background="@android:color/transparent"
-            />
-
+            >
+            <Button
+                android:id="@+id/left_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="left"
+                android:layout_gravity="left"
+                />
+            <Button
+                android:id="@+id/right_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="right"
+                android:layout_gravity="right"
+                />
+            </android.support.v7.widget.Toolbar>
 
         <EditText
             android:id="@+id/tag_etext"
