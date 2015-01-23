@@ -8,6 +8,7 @@ import android.support.annotation.LayoutRes;
 import android.support.annotation.NonNull;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarActivity;
+import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -15,6 +16,7 @@ import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ListView;
@@ -42,6 +44,8 @@ public class MainActivity extends ActionBarActivity {
 
     @InjectView(R.id.main_container_dl)
     DrawerLayout mMainContainer;
+    @InjectView(R.id.toolbar)
+    Toolbar mToolbar;
 
     @InjectView(R.id.tag_etext)
     EditText mTagEditText;
@@ -56,8 +60,10 @@ public class MainActivity extends ActionBarActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.activity_main);
         ButterKnife.inject(this);
+        setSupportActionBar(mToolbar);
 
         mMainContainer.openDrawer(Gravity.LEFT);
 
