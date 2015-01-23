@@ -6,10 +6,12 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.LayoutRes;
 import android.support.annotation.NonNull;
+import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarActivity;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -38,6 +40,9 @@ import rx.subscriptions.CompositeSubscription;
 
 public class MainActivity extends ActionBarActivity {
 
+    @InjectView(R.id.main_container_dl)
+    DrawerLayout mMainContainer;
+
     @InjectView(R.id.tag_etext)
     EditText mTagEditText;
     @InjectView((R.id.refresh_button))
@@ -53,6 +58,8 @@ public class MainActivity extends ActionBarActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         ButterKnife.inject(this);
+
+        mMainContainer.openDrawer(Gravity.LEFT);
 
         final List<Entry> entries = Collections.synchronizedList(new ArrayList<>());
 
