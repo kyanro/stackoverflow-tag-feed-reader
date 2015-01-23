@@ -45,6 +45,8 @@ public class MainActivity extends ActionBarActivity {
 
     @InjectView(R.id.main_container_dl)
     DrawerLayout mMainContainer;
+
+
     @InjectView(R.id.toolbar)
     Toolbar mToolbar;
 
@@ -66,20 +68,16 @@ public class MainActivity extends ActionBarActivity {
         ButterKnife.inject(this);
 
         mToolbar.findViewById(R.id.left_button).setOnClickListener(v -> {
-                    mMainContainer.closeDrawer(Gravity.RIGHT);
-                    mMainContainer.openDrawer(Gravity.LEFT);
-                });
+            mMainContainer.closeDrawers();
+            mMainContainer.openDrawer(Gravity.LEFT);
+        });
 
         mToolbar.findViewById(R.id.right_button).setOnClickListener(v -> {
-            mMainContainer.closeDrawer(Gravity.LEFT);
+            mMainContainer.closeDrawers();
             mMainContainer.openDrawer(Gravity.RIGHT);
         });
 
-        mToolbar.findViewById(R.id.right_button).setOnClickListener(v -> mMainContainer.openDrawer(Gravity.LEFT));
-
         setSupportActionBar(mToolbar);
-
-        mMainContainer.openDrawer(Gravity.LEFT);
 
         final List<Entry> entries = Collections.synchronizedList(new ArrayList<>());
 
