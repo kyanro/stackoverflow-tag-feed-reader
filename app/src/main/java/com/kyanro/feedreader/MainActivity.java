@@ -13,15 +13,12 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
-import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.kyanro.feedreader.models.Feed;
 import com.kyanro.feedreader.models.Feed.Entry;
 import com.kyanro.feedreader.network.Stackoverflow;
 import com.kyanro.feedreader.network.Stackoverflow.StackoverflowService;
@@ -36,7 +33,6 @@ import rx.Observable;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.android.view.OnClickEvent;
 import rx.android.view.ViewObservable;
-import rx.functions.Func1;
 import rx.subscriptions.CompositeSubscription;
 
 
