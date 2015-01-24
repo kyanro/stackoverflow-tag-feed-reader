@@ -1,5 +1,7 @@
 package com.kyanro.feedreader.models;
 
+import android.support.annotation.NonNull;
+
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.Root;
@@ -16,6 +18,7 @@ public class Feed {
 
     @Root(strict = false)
     public static class Entry {
+        @NonNull
         @Element
         public String id;
 
