@@ -65,8 +65,16 @@
         <ListView
             android:id="@+id/feed_listview"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_height="240dip"
             android:layout_below="@id/tag_etext"
+            tools:listitem="@android:layout/simple_list_item_2"
+            />
+
+        <ListView
+            android:id="@+id/no_vote_feed_listview"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_below="@id/feed_listview"
             tools:listitem="@android:layout/simple_list_item_2"
             />
 

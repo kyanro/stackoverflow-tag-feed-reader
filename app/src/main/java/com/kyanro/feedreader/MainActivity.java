@@ -15,9 +15,7 @@ import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.View.OnClickListener;
 import android.view.ViewGroup;
-import android.view.Window;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ListView;
@@ -56,6 +54,8 @@ public class MainActivity extends ActionBarActivity {
     View mRefreshButton;
     @InjectView(R.id.feed_listview)
     ListView mFeedListView;
+    @InjectView(R.id.no_vote_feed_listview)
+    ListView mNoVoteFeedListView;
 
     CompositeSubscription mSubscriptions = new CompositeSubscription();
 
@@ -79,14 +79,24 @@ public class MainActivity extends ActionBarActivity {
 
         setSupportActionBar(mToolbar);
 
-        final List<Entry> entries = Collections.synchronizedList(new ArrayList<>());
+        List<Entry> votedEntries = Collections.synchronizedList(new ArrayList<>());
+        List<Entry> noVoteEntries = Collections.synchronizedList(new ArrayList<>());
+
 
         StackoverflowService service = Stackoverflow.getStackoverflowService();
 
-        final feedAdapter feedAdapter = new feedAdapter(this, android.R.layout.simple_list_item_2, entries);
+        final FeedAdapter feedAdapter = new FeedAdapter(this, android.R.layout.simple_list_item_2, votedEntries);
         mFeedListView.setAdapter(feedAdapter);
         mFeedListView.setOnItemClickListener((parent, view, position, id) -> {
-            Entry entry = (Entry) mFeedListView.getItemAtPosition(position);
+            Entry entry = (Entry) parent.getItemAtPosition(position);
+            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(entry.id));
+            startActivity(intent);
+        });
+
+        final FeedAdapter noVoteFeedAdapter = new FeedAdapter(this, android.R.layout.simple_list_item_2, noVoteEntries);
+        mNoVoteFeedListView.setAdapter(noVoteFeedAdapter);
+        mNoVoteFeedListView.setOnItemClickListener((parent, view, position, id) -> {
+            Entry entry = (Entry) parent.getItemAtPosition(position);
             Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(entry.id));
             startActivity(intent);
         });
@@ -114,7 +124,7 @@ public class MainActivity extends ActionBarActivity {
 
         Observable<OnClickEvent> refreshClickStream = ViewObservable.clicks(mRefreshButton);
 
-        Observable<Entry> entryUpdateStream = refreshClickStream
+        Observable<Entry> entryStream = refreshClickStream
                 .doOnNext(e -> Log.d("myrx", "refresh clicked"))
                 .join(  // 更新クリック時に最新のtagChangedStream の値を後ろへ流すよう合成
                         tagTextChangedStream,
@@ -130,22 +140,41 @@ public class MainActivity extends ActionBarActivity {
                                         // unsubscribeはさせたくないため、内部でonErrorResumeNextして何事もなかったことにする
                                 .onErrorResumeNext(throwable -> Observable.empty())
                 )
-                .doOnNext(feed -> entries.clear()) // side effects. ネットワーク処理がうまくいったらリストをクリアしておく
-                .flatMap(feed -> Observable.from(feed.entries).take(5));
+                .doOnNext(feed -> votedEntries.clear()) // side effects. ネットワーク処理がうまくいったらリストをクリアしておく
+                .flatMap(feed -> Observable.from(feed.entries).take(5))
+                .cache(1);
+
+        Observable<Entry> votedEntryStream = entryStream.filter(entry -> entry.rank > 0);
+        Observable<Entry> noVoteEntryStream = entryStream.filter(entry -> entry.rank == 0);
 
         mSubscriptions.add(
-                entryUpdateStream
+                votedEntryStream
                         .observeOn(AndroidSchedulers.mainThread())
                         .subscribe(entry -> {
-                                    entries.add(entry);
+                                    votedEntries.add(entry);
                                     feedAdapter.notifyDataSetChanged();
                                 }, e -> {
-                                    Log.d("myrx", "error occured:" + e.getMessage());
-                                    Toast.makeText(this, "error:" + e.getMessage(), Toast.LENGTH_LONG).show();
+                                    Log.d("myrx", "error occured1:" + e.getMessage());
+                                    Toast.makeText(this, "error1:" + e.getMessage(), Toast.LENGTH_LONG).show();
                                 }
-                                , () -> Log.d("myrx", "complete!")
+                                , () -> Log.d("myrx", "complete1!")
                         )
         );
+
+        mSubscriptions.add(
+                noVoteEntryStream
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribe(entry -> {
+                                    noVoteEntries.add(entry);
+                                    feedAdapter.notifyDataSetChanged();
+                                }, e -> {
+                                    Log.d("myrx", "error occured2:" + e.getMessage());
+                                    Toast.makeText(this, "error2:" + e.getMessage(), Toast.LENGTH_LONG).show();
+                                }
+                                , () -> Log.d("myrx", "complete2!")
+                        )
+        );
+
     }
 
     @Override
@@ -154,13 +183,13 @@ public class MainActivity extends ActionBarActivity {
         mSubscriptions.clear();
     }
 
-    public static class feedAdapter extends ArrayAdapter<Entry> {
+    public static class FeedAdapter extends ArrayAdapter<Entry> {
 
         LayoutInflater inflater;
         @LayoutRes
         int resource;
 
-        public feedAdapter(@NonNull Context context, @LayoutRes int resource, @NonNull List<Entry> entries) {
+        public FeedAdapter(@NonNull Context context, @LayoutRes int resource, @NonNull List<Entry> entries) {
             super(context, resource, entries);
             inflater = LayoutInflater.from(context);
             this.resource = resource;
