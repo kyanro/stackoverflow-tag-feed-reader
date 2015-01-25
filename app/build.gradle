@@ -1,5 +1,7 @@
 apply plugin: 'com.android.application'
 apply plugin: 'me.tatarka.retrolambda'
+apply plugin: 'io.fabric'
+
 
 android {
     compileSdkVersion 21
@@ -16,8 +18,13 @@ android {
         targetSdkVersion 21
         versionCode 1
         versionName "1.0"
+
     }
     buildTypes {
+        debug {
+            // enable crashlytics where you need
+            ext.enableCrashlytics = false
+        }
         proguard.initWith(buildTypes.debug)
         proguard {
             minifyEnabled true
@@ -43,6 +50,9 @@ dependencies {
     }
     compile 'io.reactivex:rxandroid:0.24.0'
 
+    compile('com.twitter.sdk.android:twitter:1.+@aar') {
+        transitive = true;
+    }
 }
 
 tasks.withType(JavaCompile) {
