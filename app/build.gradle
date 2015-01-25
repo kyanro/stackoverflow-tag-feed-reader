@@ -1,5 +1,20 @@
+buildscript {
+    repositories {
+        maven { url 'https://maven.fabric.io/public' }
+    }
+
+    dependencies {
+        classpath 'io.fabric.tools:gradle:1.+'
+    }
+}
 apply plugin: 'com.android.application'
 apply plugin: 'me.tatarka.retrolambda'
+apply plugin: 'io.fabric'
+
+repositories {
+    maven { url 'https://maven.fabric.io/public' }
+}
+
 
 android {
     compileSdkVersion 21
@@ -10,21 +25,40 @@ android {
         targetCompatibility JavaVersion.VERSION_1_8
     }
 
+    Properties properties = new Properties()
+    properties.load(project.file('crashlytics.properties').newDataInputStream());
+
     defaultConfig {
         applicationId "com.kyanro.feedreader"
         minSdkVersion 15
         targetSdkVersion 21
         versionCode 1
         versionName "1.0"
+
+        //hard corded string support only :(  crashlytics: 2015/01/25
+        //I exclude crashlytics from my test app!
+        //manifestPlaceholders = [apiSecret: properties.getProperty('apiSecret')]
+        // not work in defaultConfig... why...?
+        //ext.enableCrashlytics = false
+
+        buildConfigField "String", "TWITTER_KEY", "\"" + properties.getProperty('twitterKey') + "\""
+        buildConfigField "String", "TWITTER_SECRET", "\"" + properties.getProperty('twitterSecret') + "\""
     }
+
     buildTypes {
+        debug {
+            // enable crashlytics where you need
+            ext.enableCrashlytics = false
+        }
         proguard.initWith(buildTypes.debug)
         proguard {
             minifyEnabled true
+            ext.enableCrashlytics = false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
         release {
             minifyEnabled true
+            ext.enableCrashlytics = false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
@@ -42,6 +76,9 @@ dependencies {
         exclude module: 'xpp3'
     }
     compile 'io.reactivex:rxandroid:0.24.0'
+    compile('com.twitter.sdk.android:twitter:1.1.1@aar') {
+        transitive = true;
+    }
 
 }
 

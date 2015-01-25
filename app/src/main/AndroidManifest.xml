@@ -18,6 +18,15 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+        <!--
+        hard corded string support only :(  2015/01/25
+        I exclude crashlytics from my test app!
+        -->
+        <!--
+        <meta-data-->
+            <!--android:name="com.crashlytics.ApiKey"-->
+            <!--android:value="${apiSecret}" />
+        -->
     </application>
 
 </manifest>

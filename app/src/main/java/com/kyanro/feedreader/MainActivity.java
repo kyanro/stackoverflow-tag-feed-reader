@@ -26,6 +26,9 @@ import com.kyanro.feedreader.models.Feed.Entry;
 import com.kyanro.feedreader.network.Stackoverflow;
 import com.kyanro.feedreader.network.Stackoverflow.StackoverflowService;
 
+import com.twitter.sdk.android.Twitter;
+import com.twitter.sdk.android.core.TwitterAuthConfig;
+import io.fabric.sdk.android.Fabric;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -40,6 +43,10 @@ import rx.subscriptions.CompositeSubscription;
 
 
 public class MainActivity extends ActionBarActivity {
+
+    // Note: Your consumer key and secret should be obfuscated in your source code before shipping.
+    private static final String TWITTER_KEY = BuildConfig.TWITTER_KEY;
+    private static final String TWITTER_SECRET = BuildConfig.TWITTER_SECRET;
 
     @InjectView(R.id.main_container_dl)
     DrawerLayout mMainContainer;
@@ -63,6 +70,8 @@ public class MainActivity extends ActionBarActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        TwitterAuthConfig authConfig = new TwitterAuthConfig(TWITTER_KEY, TWITTER_SECRET);
+        Fabric.with(this, new Twitter(authConfig));
 
         setContentView(R.layout.activity_main);
         ButterKnife.inject(this);
