@@ -132,7 +132,7 @@ public class MainActivity extends ActionBarActivity {
                         s -> tagTextChangedStream.publish().refCount(),
                         (onClickEvent, s) -> s)
                 .doOnNext(e -> Log.d("myrx", "joined"))
-                .distinct()
+                .distinctUntilChanged()
                 .flatMap((tag) -> service.getFeedsTag(tag)
                                 // エラーハンドリング。エラーメッセージを表示
                                 .doOnError(e -> mFeedListView.post(() ->
