@@ -37,18 +37,19 @@
 -keepnames class * { @butterknife.InjectView *;}
 
 # retrofit
--dontwarn rx.**
+-keep class com.google.gson.** { *; } # for converter
 -dontwarn com.squareup.okhttp.*
--dontwarn okio.**
 -dontwarn com.google.appengine.api.urlfetch.*
--keepattributes *Annotation*
+-dontwarn rx.**
+-dontwarn retrofit.**
 -keepattributes Signature
--keep class com.google.gson.** { *; }
--keep class com.google.inject.** { *; }
+-keepattributes *Annotation*
 -keep class org.apache.http.** { *; }
--keep class org.apache.james.mime4j.** { *; }
--keep class javax.inject.** { *; }
+-keep interface com.squareup.okhttp.** { *; }
 -keep class retrofit.** { *; }
+-keepclasseswithmembers class * {
+    @retrofit.http.* <methods>;
+}
 
 # converter-simplexml
 -dontwarn org.simpleframework.**
