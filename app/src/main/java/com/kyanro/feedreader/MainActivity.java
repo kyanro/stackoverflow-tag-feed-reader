@@ -77,8 +77,23 @@ public class MainActivity extends ActionBarActivity {
             mMainContainer.openDrawer(Gravity.RIGHT);
         });
 
-        setSupportActionBar(mToolbar);
 
+        mToolbar.setTitle("main1"); // ここでnull以外を設定するとこれ以降、mToolbar.setTitleでtitleを設定できるっぽい
+        mToolbar.setSubtitle("sub1");
+        setSupportActionBar(mToolbar);
+        // toolbar のメソッドを叩くときは setSupportActionBarの後じゃないとおそらく setSupportActionBarで上書きされる
+        // actionbar として設定した時は、mToolbarのメソッドをたたいてもactionbarを取得してから叩いてもいいっぽい
+        mToolbar.setNavigationIcon(R.drawable.ic_drawer);
+        mToolbar.setLogo(R.drawable.ic_launcher);
+        // setSupportActionBarでの設定前に、一度 mToolbar.settitle をよんである状態じゃないとここがきかない。まじか。一貫性がない気がする。ばぐ・・・？
+        // titleは設定前、iconは設定後・・・getSupportActionBar でまとめて処理したほうがよさそう
+        //mToolbar.setTitle("test2"); 
+        Log.d("mylog", "title:" + mToolbar.getTitle());
+        //ActionBar ab = getSupportActionBar();
+        //ab.setHomeAsUpIndicator(R.drawable.ic_drawer);
+        //ab.setIcon(R.drawable.ic_launcher);
+        //ab.setsub
+        
         List<Entry> votedEntries = Collections.synchronizedList(new ArrayList<>());
         List<Entry> noVoteEntries = Collections.synchronizedList(new ArrayList<>());
 
